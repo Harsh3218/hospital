@@ -10,6 +10,7 @@ import com.example.hospital.repository.PatientRepository;
 import com.example.hospital.service.AppointmentService;
 import com.example.hospital.service.DoctorService;
 import com.example.hospital.service.PatientService;
+import org.modelmapper.ModelMapper;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -28,23 +29,26 @@ public class DoctorServiceimpl implements DoctorService {
 
     @Autowired
     AppointmentService appointmentService;
+    @Autowired
+    private ModelMapper modelMapper;
 
     @Override
-    public String createDoctor(DoctorDTO doctorDTO) {
+    public DoctorDTO createDoctor(DoctorDTO doctorDTO) {
         Doctor doctor = new Doctor();
 
         doctor.setName(doctorDTO.getName());
-        doctor.setSpeciality(doctorDTO.getSpecialty());
+        doctor.setSpeciality(doctorDTO.getSpeciality());
         doctor.setAppointments(doctorDTO.getAppointments());
         doctorRepository.save(doctor);
-        return "Doctor Added Successfully";
+
+        return modelMapper.map(doctor, DoctorDTO.class);
     }
 
     @Override
-    public Doctor getDoctorById(Long id) {
+    public DoctorDTO getDoctorById(Long id) {
         Doctor doctor = doctorRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Doctor not found"));
-        return doctor;
+        return modelMapper.map(doctor, DoctorDTO.class);
     }
 
     @Override

@@ -13,7 +13,7 @@ public class DoctorReadApi {
     @Autowired
     DoctorService doctorService;
 
-    public Doctor getDoctorById(Long id) {
+    public DoctorDTO getDoctorById(Long id) {
         return doctorService.getDoctorById(id);
     }
 

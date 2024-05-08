@@ -5,6 +5,7 @@ import com.example.hospital.apis.CreateDoctorApi;
 import com.example.hospital.apis.DoctorReadApi;
 import com.example.hospital.apis.CancelAppointmentapi;
 import com.example.hospital.entity.Doctor;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -27,14 +28,14 @@ public class DoctorController {
     CancelAppointmentapi removeAppointmentapi;
 
     @PostMapping("/add")
-    public ResponseEntity<?> createDoctor(@RequestBody DoctorDTO doctorDTO) {
-        String savedDoctor = createDoctorApi.createDoctor(doctorDTO);
+    public ResponseEntity<?> createDoctor(@Valid @RequestBody DoctorDTO doctorDTO) {
+        DoctorDTO savedDoctor = createDoctorApi.createDoctor(doctorDTO);
         return new ResponseEntity<>(savedDoctor, HttpStatus.CREATED);
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Doctor> getDoctorById(@PathVariable("id") Long id) {
-        Doctor getDoctor = doctorReadApi.getDoctorById(id);
+    public ResponseEntity<DoctorDTO> getDoctorById(@PathVariable("id") Long id) {
+        DoctorDTO getDoctor = doctorReadApi.getDoctorById(id);
         return new ResponseEntity<>(getDoctor, HttpStatus.OK);
     }
 
