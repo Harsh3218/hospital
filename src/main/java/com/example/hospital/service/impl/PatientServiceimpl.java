@@ -6,8 +6,8 @@ import com.example.hospital.entity.Patient;
 import com.example.hospital.exception.NotFoundException;
 import com.example.hospital.repository.DoctorRepository;
 import com.example.hospital.repository.PatientRepository;
+import com.example.hospital.wrapper.BookingResponse;
 import com.example.hospital.service.PatientService;
-import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -27,7 +27,7 @@ public class PatientServiceimpl implements PatientService {
     private DoctorRepository doctorRepository;
 
     @Override
-    public String bookAppointment(PatientDTO patientDTO) {
+    public BookingResponse bookAppointment(PatientDTO patientDTO) {
         Patient patient = new Patient();
         patient.setId(patientDTO.getId());
         patient.setName(patientDTO.getName());
@@ -40,28 +40,33 @@ public class PatientServiceimpl implements PatientService {
 
         boolean appointmentExists = patientRepository.existsByDoctorIdAndNameAndAppointmentDateTime(patientDTO.getDoctorId(), patientDTO.getName(), patientDTO.getAppointmentDateTime());
         if (appointmentExists) {
-            return "Appointment already booked.";
-        } else {
-            Doctor doctor = doctorRepository.findById(patientDTO.getDoctorId())
-                    .orElseThrow(() -> new NotFoundException("Doctor not found"));
-
-            if (doctor.isBusy(patientDTO.getAppointmentDateTime())) {
-                return "Doctor is busy";
-            } else {
-
-                doctor.bookAppointment(patientDTO.getAppointmentDateTime());
-                patient.setDoctor(doctor);
-
-
-                patientRepository.save(patient);
-                return "Appointment booked successfully.";
-            }
+            return new BookingResponse("Appointment Already Booked");
         }
-    }
 
-    @Override
-    public String updateAppointment(PatientDTO patientDTO) {
-        return "";
+        Doctor doctor = doctorRepository.findById(patientDTO.getDoctorId())
+                .orElseThrow(() -> new NotFoundException("Doctor not found"));
+
+        if (doctor.isBusy(patientDTO.getAppointmentDateTime())) {
+            return new BookingResponse("Doctor is busy");
+        }
+
+        doctor.bookAppointment(patientDTO.getAppointmentDateTime());
+        patient.setDoctor(doctor);
+        patientRepository.save(patient);
+
+        return new BookingResponse(
+                "Appointment Booked",
+                patient.getId(),
+                patient.getName(),
+                patient.getGender(),
+                patient.getAge(),
+                patient.getAddress(),
+                patient.getPhone(),
+                patient.getEmail(),
+                patient.getAppointmentDateTime(),
+                doctor.getName(),
+                doctor.getSpeciality()
+        );
     }
 
     @Override

@@ -4,7 +4,7 @@ import com.example.hospital.DTO.PatientDTO;
 import com.example.hospital.apis.BookAPI;
 import com.example.hospital.apis.CancelAppointmentapi;
 import com.example.hospital.apis.PatientListapi;
-import com.example.hospital.entity.Patient;
+import com.example.hospital.wrapper.BookingResponse;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -27,8 +27,8 @@ public class PatientController{
     private PatientListapi patientListapi;
 
     @PostMapping("/book-appointment")
-    public ResponseEntity<String> bookAppointment(@Valid @RequestBody PatientDTO patientDTO){
-        String response = bookAPI.bookAppointment(patientDTO);
+    public ResponseEntity<BookingResponse> bookAppointment(@Valid @RequestBody PatientDTO patientDTO){
+        BookingResponse response = bookAPI.bookAppointment(patientDTO);
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
