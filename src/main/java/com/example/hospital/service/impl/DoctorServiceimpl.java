@@ -7,6 +7,7 @@ import com.example.hospital.entity.Doctor;
 import com.example.hospital.entity.Patient;
 import com.example.hospital.repository.DoctorRepository;
 import com.example.hospital.repository.PatientRepository;
+import com.example.hospital.service.AppointmentService;
 import com.example.hospital.service.DoctorService;
 import com.example.hospital.service.PatientService;
 import org.springframework.beans.BeanUtils;
@@ -24,6 +25,9 @@ public class DoctorServiceimpl implements DoctorService {
 
     @Autowired
     private PatientService patientService;
+
+    @Autowired
+    AppointmentService appointmentService;
 
     @Override
     public String createDoctor(DoctorDTO doctorDTO) {
@@ -52,7 +56,7 @@ public class DoctorServiceimpl implements DoctorService {
     public String removeAppointment(Long id, LocalDateTime dateTime) {
         Doctor doctor = doctorRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Doctor not found"));
-        doctor.cancelAppointment(dateTime);
+        appointmentService.cancelAppointment(id,dateTime);
         doctorRepository.save(doctor);
         List<PatientDTO> patients = patientService.getAllPatients(id, dateTime);
         patients.forEach(patient -> patientService.cancelAppointment(patient.getId()));

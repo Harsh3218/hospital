@@ -6,6 +6,7 @@ import com.example.hospital.entity.Patient;
 import com.example.hospital.exception.NotFoundException;
 import com.example.hospital.repository.DoctorRepository;
 import com.example.hospital.repository.PatientRepository;
+import com.example.hospital.service.AppointmentService;
 import com.example.hospital.wrapper.BookingResponse;
 import com.example.hospital.service.PatientService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,6 +26,9 @@ public class PatientServiceimpl implements PatientService {
 
     @Autowired
     private DoctorRepository doctorRepository;
+
+    @Autowired
+    private AppointmentService appointmentService;
 
     @Override
     public BookingResponse bookAppointment(PatientDTO patientDTO) {
@@ -46,11 +50,11 @@ public class PatientServiceimpl implements PatientService {
         Doctor doctor = doctorRepository.findById(patientDTO.getDoctorId())
                 .orElseThrow(() -> new NotFoundException("Doctor not found"));
 
-        if (doctor.isBusy(patientDTO.getAppointmentDateTime())) {
+        if (appointmentService.isBusy(patientDTO.getDoctorId(),patientDTO.getAppointmentDateTime())) {
             return new BookingResponse("Doctor is busy");
         }
 
-        doctor.bookAppointment(patientDTO.getAppointmentDateTime());
+        appointmentService.bookAppointment(patientDTO.getDoctorId(),patientDTO.getAppointmentDateTime());
         patient.setDoctor(doctor);
         patientRepository.save(patient);
 
@@ -82,7 +86,7 @@ public class PatientServiceimpl implements PatientService {
 
         patientRepository.deleteById(id);
         if (doctor != null && appointmentDateTime != null) {
-            doctor.cancelAppointment(appointmentDateTime);
+            appointmentService.cancelAppointment(doctor.getId(),appointmentDateTime);
             doctorRepository.save(doctor);
         }
         return "Appointment cancelled";
