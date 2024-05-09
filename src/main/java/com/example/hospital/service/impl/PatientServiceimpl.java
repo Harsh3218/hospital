@@ -9,6 +9,7 @@ import com.example.hospital.repository.PatientRepository;
 import com.example.hospital.service.AppointmentService;
 import com.example.hospital.wrapper.BookingResponse;
 import com.example.hospital.service.PatientService;
+import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -21,6 +22,8 @@ import java.util.stream.Collectors;
 @Service
 public class PatientServiceimpl implements PatientService {
 
+    private final ModelMapper modelMapper;
+
     @Autowired
     private PatientRepository patientRepository;
 
@@ -30,17 +33,15 @@ public class PatientServiceimpl implements PatientService {
     @Autowired
     private AppointmentService appointmentService;
 
+    @Autowired
+    public PatientServiceimpl(ModelMapper modelMapper) {
+        this.modelMapper = modelMapper;
+    }
+
     @Override
     public BookingResponse bookAppointment(PatientDTO patientDTO) {
-        Patient patient = new Patient();
-        patient.setId(patientDTO.getId());
-        patient.setName(patientDTO.getName());
-        patient.setGender(patientDTO.getGender());
-        patient.setAge(patientDTO.getAge());
-        patient.setAddress(patientDTO.getAddress());
-        patient.setPhone(patientDTO.getPhone());
-        patient.setEmail(patientDTO.getEmail());
-        patient.setAppointmentDateTime(patientDTO.getAppointmentDateTime());
+        
+        Patient patient = modelMapper.map(patientDTO, Patient.class);
 
         boolean appointmentExists = patientRepository.existsByDoctorIdAndNameAndAppointmentDateTime(patientDTO.getDoctorId(), patientDTO.getName(), patientDTO.getAppointmentDateTime());
         if (appointmentExists) {
