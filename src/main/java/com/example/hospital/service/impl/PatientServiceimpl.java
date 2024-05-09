@@ -1,6 +1,7 @@
 package com.example.hospital.service.impl;
 
 import com.example.hospital.DTO.PatientDTO;
+import com.example.hospital.DTO.PatientUpdateDTO;
 import com.example.hospital.entity.Doctor;
 import com.example.hospital.entity.Patient;
 import com.example.hospital.exception.NotFoundException;
@@ -13,6 +14,7 @@ import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import javax.swing.text.html.Option;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -40,7 +42,7 @@ public class PatientServiceimpl implements PatientService {
 
     @Override
     public BookingResponse bookAppointment(PatientDTO patientDTO) {
-        
+
         Patient patient = modelMapper.map(patientDTO, Patient.class);
 
         boolean appointmentExists = patientRepository.existsByDoctorIdAndNameAndAppointmentDateTime(patientDTO.getDoctorId(), patientDTO.getName(), patientDTO.getAppointmentDateTime());
@@ -98,13 +100,7 @@ public class PatientServiceimpl implements PatientService {
         List<Patient> patients = patientRepository.findByDoctorIdAndAppointmentDateTime(doctorId, dateTime);
         List<PatientDTO> patientDTOs = new ArrayList<>();
         for (Patient patient : patients) {
-            PatientDTO patientDTO = new PatientDTO();
-            patientDTO.setId(patient.getId());
-            patientDTO.setName(patient.getName());
-            patientDTO.setAddress(patient.getAddress());
-            patientDTO.setPhone(patient.getPhone());
-            patientDTO.setEmail(patient.getEmail());
-            patientDTOs.add(patientDTO);
+            patientDTOs.add(modelMapper.map(patient, PatientDTO.class));
         }
         return patientDTOs;
     }
@@ -117,20 +113,58 @@ public class PatientServiceimpl implements PatientService {
                 .collect(Collectors.toList());
     }
 
+    @Override
+    public BookingResponse updateAppointment(Long id, PatientUpdateDTO patientUpdateDTO) {
+        Optional<Patient> optionalPatient = patientRepository.findById(id);
+        Patient existingPatient = optionalPatient.orElseThrow(() -> new NotFoundException("Patient not found"));
+
+        if (patientUpdateDTO.getName() != null) {
+            existingPatient.setName(patientUpdateDTO.getName());
+        }
+        if (patientUpdateDTO.getGender() != null) {
+            existingPatient.setGender(patientUpdateDTO.getGender());
+        }
+        if (patientUpdateDTO.getAge() >= 1) {
+            existingPatient.setAge(patientUpdateDTO.getAge());
+        }
+        if (patientUpdateDTO.getAddress() != null) {
+            existingPatient.setAddress(patientUpdateDTO.getAddress());
+        }
+        if (patientUpdateDTO.getPhone() != null) {
+            existingPatient.setPhone(patientUpdateDTO.getPhone());
+        }
+        if (patientUpdateDTO.getEmail() != null) {
+            existingPatient.setEmail(patientUpdateDTO.getEmail());
+        }
+        if (patientUpdateDTO.getAppointmentDateTime() != null) {
+            existingPatient.setAppointmentDateTime(patientUpdateDTO.getAppointmentDateTime());
+        }
+
+        Patient updatedPatient = patientRepository.save(existingPatient);
+
+        Doctor doctor = updatedPatient.getDoctor();
+
+        return new BookingResponse(
+                "Appointment updated",
+                updatedPatient.getId(),
+                updatedPatient.getName(),
+                updatedPatient.getGender(),
+                updatedPatient.getAge(),
+                updatedPatient.getAddress(),
+                updatedPatient.getPhone(),
+                updatedPatient.getEmail(),
+                updatedPatient.getAppointmentDateTime(),
+                doctor != null ? doctor.getName() : null,
+                doctor != null ? doctor.getSpeciality() : null
+        );
+    }
+
+
     private PatientDTO convertToDTO(Patient patient) {
-        PatientDTO patientDTO = new PatientDTO();
-        patientDTO.setId(patient.getId());
-        patientDTO.setName(patient.getName());
-        patientDTO.setGender(patient.getGender());
-        patientDTO.setAge(patient.getAge());
-        patientDTO.setAddress(patient.getAddress());
-        patientDTO.setPhone(patient.getPhone());
-        patientDTO.setEmail(patient.getEmail());
-        patientDTO.setAppointmentDateTime(patient.getAppointmentDateTime());
+        PatientDTO patientDTO = modelMapper.map(patient, PatientDTO.class);
 
         Doctor doctor = patient.getDoctor();
         if(doctor != null) {
-            patientDTO.setDoctorId(doctor.getId());
             patientDTO.setDocName(doctor.getName());
         }
         return patientDTO;

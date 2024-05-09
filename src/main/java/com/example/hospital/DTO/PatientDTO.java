@@ -1,5 +1,6 @@
 package com.example.hospital.DTO;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import jakarta.validation.constraints.*;
 import lombok.Data;
 import lombok.Getter;
@@ -9,6 +10,7 @@ import java.time.LocalDateTime;
 
 @Getter
 @Setter
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class PatientDTO {
 
     private Long id;
@@ -25,7 +27,7 @@ public class PatientDTO {
     @NotBlank(message = "Address cannot be blank")
     private String address;
 
-    @NotBlank(message = "Phone number cannot be blank")
+    //@NotBlank(message = "Phone number cannot be blank")
     private String phone;
 
     @Email(message = "Invalid email format")

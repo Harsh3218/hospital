@@ -34,11 +34,8 @@ public class DoctorServiceimpl implements DoctorService {
 
     @Override
     public DoctorDTO createDoctor(DoctorDTO doctorDTO) {
-        Doctor doctor = new Doctor();
+        Doctor doctor = modelMapper.map(doctorDTO, Doctor.class);
 
-        doctor.setName(doctorDTO.getName());
-        doctor.setSpeciality(doctorDTO.getSpeciality());
-        doctor.setAppointments(doctorDTO.getAppointments());
         doctorRepository.save(doctor);
 
         return modelMapper.map(doctor, DoctorDTO.class);
