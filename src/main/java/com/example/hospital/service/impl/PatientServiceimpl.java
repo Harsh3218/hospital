@@ -1,5 +1,6 @@
 package com.example.hospital.service.impl;
 
+import ch.qos.logback.core.pattern.parser.OptionTokenizer;
 import com.example.hospital.DTO.PatientDTO;
 import com.example.hospital.DTO.PatientUpdateDTO;
 import com.example.hospital.entity.Doctor;
@@ -57,6 +58,11 @@ public class PatientServiceimpl implements PatientService {
             return new BookingResponse("Doctor is busy");
         }
 
+        LocalDateTime nextAvailableSlot = findNextAvailableSlot(patientDTO.getDoctorId(), patientDTO.getAppointmentDateTime());
+        if (nextAvailableSlot != null) {
+            return new BookingResponse("Next available slot: " + nextAvailableSlot);
+        }
+
         appointmentService.bookAppointment(patientDTO.getDoctorId(),patientDTO.getAppointmentDateTime());
         patient.setDoctor(doctor);
         patientRepository.save(patient);
@@ -74,6 +80,14 @@ public class PatientServiceimpl implements PatientService {
                 doctor.getName(),
                 doctor.getSpeciality()
         );
+    }
+
+    private LocalDateTime findNextAvailableSlot(Long doctorId, LocalDateTime currentAppointmentDateTime) {
+        LocalDateTime nextSlot = currentAppointmentDateTime.plusMinutes(30);
+        while (patientRepository.existsByDoctorIdAndAppointmentDateTime(doctorId, nextSlot)) {
+            nextSlot = nextSlot.plusMinutes(30);
+        }
+        return nextSlot;
     }
 
     @Override
