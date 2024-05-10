@@ -43,28 +43,45 @@ public class PatientServiceimpl implements PatientService {
 
     @Override
     public BookingResponse bookAppointment(PatientDTO patientDTO) {
-
-        Patient patient = modelMapper.map(patientDTO, Patient.class);
+        LocalDateTime appointmentDateTime = patientDTO.getAppointmentDateTime();
 
         boolean appointmentExists = patientRepository.existsByDoctorIdAndNameAndAppointmentDateTime(patientDTO.getDoctorId(), patientDTO.getName(), patientDTO.getAppointmentDateTime());
         if (appointmentExists) {
             return new BookingResponse("Appointment Already Booked");
         }
 
-        Doctor doctor = doctorRepository.findById(patientDTO.getDoctorId())
-                .orElseThrow(() -> new NotFoundException("Doctor not found"));
-
-        if (appointmentService.isBusy(patientDTO.getDoctorId(),patientDTO.getAppointmentDateTime())) {
+        if (appointmentService.isBusy(patientDTO.getDoctorId(), appointmentDateTime)) {
             return new BookingResponse("Doctor is busy");
         }
 
-        LocalDateTime nextAvailableSlot = findNextAvailableSlot(patientDTO.getDoctorId(), patientDTO.getAppointmentDateTime());
-        if (nextAvailableSlot != null) {
-            return new BookingResponse("Next available slot: " + nextAvailableSlot);
+        Optional<Patient> lastAppointmentOpt = patientRepository.findTopByDoctorIdOrderByAppointmentDateTimeDesc(patientDTO.getDoctorId());
+        LocalDateTime nextAvailableSlot;
+        if (lastAppointmentOpt.isPresent()) {
+            Patient lastAppointment = lastAppointmentOpt.get();
+            LocalDateTime lastAppointmentEnd = lastAppointment.getAppointmentDateTime().plusMinutes(30);
+            if (appointmentDateTime.isBefore(lastAppointmentEnd)) {
+
+                nextAvailableSlot = lastAppointmentEnd;
+
+                return new BookingResponse("Next available slot: " + nextAvailableSlot);
+            } else {
+
+                nextAvailableSlot = appointmentDateTime;
+            }
+        } else {
+
+            nextAvailableSlot = appointmentDateTime;
         }
 
-        appointmentService.bookAppointment(patientDTO.getDoctorId(),patientDTO.getAppointmentDateTime());
+
+        Doctor doctor = doctorRepository.findById(patientDTO.getDoctorId())
+                .orElseThrow(() -> new NotFoundException("Doctor not found"));
+
+        appointmentService.bookAppointment(patientDTO.getDoctorId(), appointmentDateTime);
+
+        Patient patient = modelMapper.map(patientDTO, Patient.class);
         patient.setDoctor(doctor);
+        patient.setAppointmentDateTime(appointmentDateTime);
         patientRepository.save(patient);
 
         return new BookingResponse(
@@ -81,6 +98,9 @@ public class PatientServiceimpl implements PatientService {
                 doctor.getSpeciality()
         );
     }
+
+
+
 
     private LocalDateTime findNextAvailableSlot(Long doctorId, LocalDateTime currentAppointmentDateTime) {
         LocalDateTime nextSlot = currentAppointmentDateTime.plusMinutes(30);

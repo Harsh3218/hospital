@@ -6,10 +6,13 @@ import org.springframework.stereotype.Repository;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface PatientRepository extends JpaRepository<Patient, Long> {
     List<Patient> findByDoctorIdAndAppointmentDateTime(Long doctorId, LocalDateTime appointmentDateTime);
     boolean existsByDoctorIdAndNameAndAppointmentDateTime(Long doctorId, String name, LocalDateTime appointmentDateTime);
     boolean existsByDoctorIdAndAppointmentDateTime(Long doctorId, LocalDateTime nextSlot);
+
+    Optional<Patient> findTopByDoctorIdOrderByAppointmentDateTimeDesc(Long doctorId);
 }
